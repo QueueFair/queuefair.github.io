@@ -361,7 +361,6 @@ function buildQueue() {
   let filtered;
   if (manualMode) {
     const allIds = Object.keys(manualMembers);
-    // Distribute tracks round-robin among all members, then filter to active
     const pool = shuffle(allTracks).map((t, i) => ({ ...t, addedBy: allIds[i % allIds.length] }));
     filtered = pool.filter(t => activeMembers.has(t.addedBy));
   } else {
@@ -370,7 +369,19 @@ function buildQueue() {
 
   if (filtered.length === 0) { alert('No tracks found for selected members.'); return; }
 
-  queueTracks = shuffle(filtered);
+  const equalMode = $('equalMode')?.checked;
+  if (equalMode) {
+    const perPerson = Math.min(...[...activeMembers].map(uid =>
+      filtered.filter(t => t.addedBy === uid).length
+    ));
+    let equalized = [];
+    activeMembers.forEach(uid => {
+      equalized = equalized.concat(shuffle(filtered.filter(t => t.addedBy === uid)).slice(0, perPerson));
+    });
+    queueTracks = shuffle(equalized);
+  } else {
+    queueTracks = shuffle(filtered);
+  }
   $('q-count').textContent = queueTracks.length;
   $('q-members').textContent = activeMembers.size;
 

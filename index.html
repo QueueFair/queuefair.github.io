@@ -43,7 +43,12 @@
       </div>
       <div id="status2" class="status"></div>
     </div>
-    <button class="btn btn-full" onclick="buildQueue()">Build Shuffled Queue →</button>
+    <label class="equal-toggle">
+      <input type="checkbox" id="equalMode">
+      <span class="equal-toggle-box"></span>
+      <span class="equal-toggle-label">Equal songs per person</span>
+    </label>
+    <button class="btn btn-full" onclick="buildQueue()">Build Shuffled Queue</button>
   </div>
 
   <!-- STEP 4: Queue + play -->
