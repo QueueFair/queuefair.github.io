@@ -209,15 +209,15 @@ async function selectPlaylist(pl) {
       return;
     }
 
-    await Promise.all(Object.keys(memberMap).map(async (uid) => {
-      try {
-        const u = await spotifyGet(`https://api.spotify.com/v1/users/${uid}`);
-        console.log('[GQF] user', uid, '-> display_name:', u.display_name);
-        memberMap[uid] = u.display_name || uid;
-      } catch (_) {
-        memberMap[uid] = uid;
-      }
-    }));
+    // Spotify's /users/{id} endpoint is restricted to 403 for other users.
+    // Only /me works reliably, so identify the current user and shorten other IDs.
+    try {
+      const me = await spotifyGet('https://api.spotify.com/v1/me');
+      if (memberMap[me.id] !== undefined) memberMap[me.id] = me.display_name || me.id;
+    } catch (_) {}
+    Object.keys(memberMap).forEach(uid => {
+      if (memberMap[uid] === uid) memberMap[uid] = uid.length > 15 ? uid.slice(0, 10) + '...' : uid;
+    });
 
     renderMembersGrid();
     const skipNote = skipped > 0 ? ` (${skipped} local/unavailable skipped)` : '';
@@ -238,20 +238,53 @@ function renderMembersGrid() {
     return;
   }
   users.forEach(uid => {
-    const displayName = memberMap[uid];
     const trackCount = allTracks.filter(t => t.addedBy === uid).length;
     const chip = document.createElement('div');
     chip.className = 'member-chip';
-    chip.innerHTML = `<div class="dot"></div>
-      <div class="member-name">
-        ${esc(displayName)}<br>
-        <span style="font-size:0.6rem;color:var(--muted)">${trackCount} songs</span>
-      </div>`;
-    chip.onclick = () => {
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'member-label';
+    nameEl.textContent = memberMap[uid];
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'rename-btn';
+    editBtn.textContent = '✎';
+    editBtn.title = 'Rename';
+    editBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = memberMap[uid];
+      input.className = 'rename-input';
+      nameEl.replaceWith(input);
+      editBtn.style.display = 'none';
+      input.focus();
+      input.select();
+      const save = () => {
+        const val = input.value.trim() || memberMap[uid];
+        memberMap[uid] = val;
+        nameEl.textContent = val;
+        input.replaceWith(nameEl);
+        editBtn.style.display = '';
+      };
+      input.addEventListener('blur', save);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') input.blur(); });
+    });
+
+    const nameWrap = document.createElement('div');
+    nameWrap.className = 'member-name';
+    nameWrap.appendChild(nameEl);
+    nameWrap.appendChild(editBtn);
+    nameWrap.insertAdjacentHTML('beforeend', `<br><span style="font-size:0.6rem;color:var(--muted)">${trackCount} songs</span>`);
+
+    chip.innerHTML = '';
+    chip.appendChild(document.createElement('div')).className = 'dot';
+    chip.appendChild(nameWrap);
+    chip.addEventListener('click', () => {
       if (activeMembers.has(uid)) activeMembers.delete(uid);
       else activeMembers.add(uid);
       chip.classList.toggle('active', activeMembers.has(uid));
-    };
+    });
     grid.appendChild(chip);
   });
 }

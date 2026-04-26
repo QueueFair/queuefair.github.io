@@ -323,3 +323,25 @@ input[type="text"]::placeholder { color: var(--muted); }
 }
 .selected-playlist-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
 .selected-playlist-count { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+.rename-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 0 0 0 4px;
+  opacity: 0.5;
+  vertical-align: middle;
+}
+.rename-btn:hover { opacity: 1; color: var(--green); }
+.rename-input {
+  font-size: 0.8rem;
+  background: var(--bg);
+  border: 1px solid var(--green);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 1px 4px;
+  width: 90px;
+  outline: none;
+}
