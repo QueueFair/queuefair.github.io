@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Group Queue Filter</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <h1>Group<br><span>Queue</span> Filter</h1>
+  <p class="subtitle">// shuffle only the songs from people who are actually there</p>
+
+  <!-- STEP 1: Connect -->
+  <div class="step active" id="step-setup">
+    <button class="btn btn-full" onclick="doAuth()">Connect to Spotify</button>
+    <div id="status" class="status"></div>
+  </div>
+
+  <!-- STEP 2: Pick playlist -->
+  <div class="step" id="step-playlists">
+    <div class="card">
+      <div class="card-label">Your Playlists (tap one to select)</div>
+      <div id="playlist-grid" class="playlist-grid">
+        <div class="loading">Loading your playlists…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Who's here -->
+  <div class="step" id="step-members">
+    <button class="back-btn" onclick="goBack('step-playlists')">← pick a different playlist</button>
+    <div id="selected-playlist-display"></div>
+    <div class="card">
+      <div class="card-label">Who's here right now?</div>
+      <div class="members-grid" id="members-grid">
+        <div class="loading">Loading…</div>
+      </div>
+      <div class="select-row">
+        <button class="select-link" onclick="selectAll(true)">select all</button>
+        <span style="color:var(--border)">|</span>
+        <button class="select-link" onclick="selectAll(false)">clear</button>
+      </div>
+      <div id="status2" class="status"></div>
+    </div>
+    <button class="btn btn-full" onclick="buildQueue()">Build Shuffled Queue →</button>
+  </div>
+
+  <!-- STEP 4: Queue + play -->
+  <div class="step" id="step-queue">
+    <button class="back-btn" onclick="goBack('step-members')">← change who's here</button>
+    <div class="card">
+      <div class="stats-row">
+        <div>
+          <div class="track-count" id="q-count">0</div>
+          <div class="track-count-label">tracks queued</div>
+        </div>
+        <div>
+          <div class="track-count" id="q-members" style="font-size:1.6rem">0</div>
+          <div class="track-count-label">members included</div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="track-list" id="track-list"></div>
+    </div>
+    <button class="btn btn-full" onclick="startPlayback()">▶ Play on Spotify Now</button>
+    <div id="status3" class="status" style="margin-top:0.8rem;"></div>
+    <div class="notice" style="margin-top:1rem; font-size:0.68rem;">
+      Make sure Spotify is open and playing on your device before hitting play. This replaces your current queue.
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
