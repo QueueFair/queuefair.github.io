@@ -391,20 +391,59 @@ function buildQueue() {
   if (filtered.length === 0) { alert('No tracks found for selected members.'); return; }
 
   const equalMode = $('equalMode')?.checked;
+  const weightedMode = $('weightedMode')?.checked;
+
+  // Build per-person pools
+  const members = [...activeMembers];
+  const pools = {};
+  members.forEach(uid => {
+    pools[uid] = shuffle(filtered.filter(t => t.addedBy === uid));
+  });
+
+  // Equal mode caps every pool to the smallest one
   if (equalMode) {
-    const members = [...activeMembers];
-    const pools = {};
-    members.forEach(uid => {
-      pools[uid] = shuffle(filtered.filter(t => t.addedBy === uid));
-    });
+    const minCount = Math.min(...members.map(uid => pools[uid].length));
+    members.forEach(uid => { pools[uid] = pools[uid].slice(0, minCount); });
+  }
+
+  if (weightedMode) {
+    const lastPicked = {};
+    members.forEach(uid => lastPicked[uid] = -members.length);
+    let streakPerson = null;
+    let streakCount = 0;
     queueTracks = [];
+    let pos = 0;
+
     while (members.some(uid => pools[uid].length > 0)) {
-      const remaining = members.filter(uid => pools[uid].length > 0);
-      const uid = remaining[Math.floor(Math.random() * remaining.length)];
-      queueTracks.push(pools[uid].pop());
+      const available = members.filter(uid => pools[uid].length > 0);
+      const N = available.length;
+
+      const weights = {};
+      available.forEach(uid => {
+        const wait = pos - lastPicked[uid];
+        weights[uid] = Math.max(1, Math.floor(wait / N));
+        if (uid === streakPerson && streakCount >= 2 && N > 1) weights[uid] = 0;
+      });
+
+      const eligible = available.filter(uid => weights[uid] > 0);
+      const pool = eligible.length > 0 ? eligible : available;
+      const totalWeight = pool.reduce((sum, uid) => sum + (weights[uid] || 1), 0);
+
+      let rand = Math.random() * totalWeight;
+      let chosen = pool[pool.length - 1];
+      for (const uid of pool) {
+        rand -= weights[uid] || 1;
+        if (rand <= 0) { chosen = uid; break; }
+      }
+
+      queueTracks.push(pools[chosen].pop());
+      lastPicked[chosen] = pos;
+      streakCount = chosen === streakPerson ? streakCount + 1 : 1;
+      streakPerson = chosen;
+      pos++;
     }
   } else {
-    queueTracks = shuffle(filtered);
+    queueTracks = shuffle(members.flatMap(uid => pools[uid]));
   }
   $('q-count').textContent = queueTracks.length;
   $('q-members').textContent = activeMembers.size;
