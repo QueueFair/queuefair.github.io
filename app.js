@@ -371,14 +371,17 @@ function buildQueue() {
 
   const equalMode = $('equalMode')?.checked;
   if (equalMode) {
-    const perPerson = Math.min(...[...activeMembers].map(uid =>
-      filtered.filter(t => t.addedBy === uid).length
-    ));
-    let equalized = [];
-    activeMembers.forEach(uid => {
-      equalized = equalized.concat(shuffle(filtered.filter(t => t.addedBy === uid)).slice(0, perPerson));
+    const members = [...activeMembers];
+    const pools = {};
+    members.forEach(uid => {
+      pools[uid] = shuffle(filtered.filter(t => t.addedBy === uid));
     });
-    queueTracks = shuffle(equalized);
+    queueTracks = [];
+    while (members.some(uid => pools[uid].length > 0)) {
+      const remaining = members.filter(uid => pools[uid].length > 0);
+      const uid = remaining[Math.floor(Math.random() * remaining.length)];
+      queueTracks.push(pools[uid].pop());
+    }
   } else {
     queueTracks = shuffle(filtered);
   }
