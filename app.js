@@ -442,14 +442,24 @@ async function startPlayback() {
 
     // Queue the rest
     for (let i = 1; i < queueTracks.length; i++) {
-      await fetch(
-        `https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(queueTracks[i].uri)}&device_id=${device.id}`,
-        { method: 'POST', headers: { Authorization: 'Bearer ' + accessToken } }
-      );
-      if (i % 10 === 0) await new Promise(r => setTimeout(r, 200));
+      setStatus('status3', `Queuing tracks... ${i} / ${queueTracks.length - 1}`);
+      let res;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        res = await fetch(
+          `https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(queueTracks[i].uri)}&device_id=${device.id}`,
+          { method: 'POST', headers: { Authorization: 'Bearer ' + accessToken } }
+        );
+        if (res.status === 429) {
+          const wait = (parseInt(res.headers.get('Retry-After') || '2') + 1) * 1000;
+          await new Promise(r => setTimeout(r, wait));
+        } else {
+          break;
+        }
+      }
+      await new Promise(r => setTimeout(r, 100));
     }
 
-    setStatus('status3', `✓ Queued ${queueTracks.length} tracks on "${device.name}"!`, 'ok');
+    setStatus('status3', `Queued ${queueTracks.length} tracks on "${device.name}"!`, 'ok');
   } catch (e) {
     setStatus('status3', '✗ ' + e.message, 'err');
   }
