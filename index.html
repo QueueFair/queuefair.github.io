@@ -47,12 +47,14 @@
     <label class="equal-toggle">
       <input type="checkbox" id="equalMode">
       <span class="equal-toggle-box"></span>
-      <span class="equal-toggle-label">Equal songs per person</span>
+      <span class="equal-toggle-label">Weighted Selection</span>
+      <span class="info-icon" data-tooltip="Each person contributes the same number of songs, capped to whoever added the fewest.">i</span>
     </label>
     <label class="equal-toggle">
       <input type="checkbox" id="weightedMode">
       <span class="equal-toggle-box"></span>
-      <span class="equal-toggle-label">Weighted selection</span>
+      <span class="equal-toggle-label">Weighted Ordering</span>
+      <span class="info-icon" data-tooltip="No one plays more than twice in a row. People who haven't had a song in a while are more likely to be picked next.">i</span>
     </label>
     <button class="btn btn-full" onclick="buildQueue()">Build Shuffled Queue</button>
   </div>

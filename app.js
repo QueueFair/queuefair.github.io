@@ -70,6 +70,12 @@ function shuffle(arr) {
   return a;
 }
 
+document.addEventListener('click', e => {
+  const icon = e.target.closest('.info-icon');
+  document.querySelectorAll('.info-icon.open').forEach(el => { if (el !== icon) el.classList.remove('open'); });
+  if (icon) { e.preventDefault(); icon.classList.toggle('open'); }
+});
+
 // ---- OAuth PKCE ----
 async function sha256(plain) {
   const enc = new TextEncoder().encode(plain);
