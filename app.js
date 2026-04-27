@@ -568,3 +568,23 @@ async function startPlayback() {
     setStatus('status', '✗ ' + e.message, 'err');
   }
 })();
+
+// Cursor-reactive background parallax
+(function () {
+  const waveBg = document.querySelector('.wave-bg');
+  let ticking = false;
+  document.addEventListener('mousemove', e => {
+    document.documentElement.style.setProperty('--cx', e.clientX + 'px');
+    document.documentElement.style.setProperty('--cy', e.clientY + 'px');
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      if (waveBg) {
+        const nx = e.clientX / window.innerWidth - 0.5;
+        const ny = e.clientY / window.innerHeight - 0.5;
+        waveBg.style.transform = `translate(${nx * 28}px, ${ny * 16}px)`;
+      }
+      ticking = false;
+    });
+  });
+})();
