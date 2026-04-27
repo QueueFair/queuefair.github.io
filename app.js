@@ -128,12 +128,15 @@ async function exchangeCode(code) {
 }
 
 // ---- Spotify API ----
-async function spotifyGet(url) {
+async function spotifyGet(url, statusEl) {
   for (let attempt = 0; attempt < 5; attempt++) {
     const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
     if (res.status === 429) {
-      const wait = (parseInt(res.headers.get('Retry-After') || '2') + 1) * 1000;
-      await new Promise(r => setTimeout(r, wait));
+      const secs = parseInt(res.headers.get('Retry-After') || '2') + 1;
+      for (let s = secs; s > 0; s--) {
+        setStatus(statusEl || 'status2', `Rate limited by Spotify, retrying in ${s}s...`);
+        await new Promise(r => setTimeout(r, 1000));
+      }
       continue;
     }
     if (!res.ok) {
@@ -143,7 +146,7 @@ async function spotifyGet(url) {
     }
     return res.json();
   }
-  throw new Error('Too many requests. Try again in a moment.');
+  throw new Error('Rate limited. Please wait a moment and try again.');
 }
 
 // ---- Load playlists ----
@@ -155,7 +158,7 @@ async function loadPlaylists() {
     let playlists = [];
     let url = 'https://api.spotify.com/v1/me/playlists?limit=50';
     while (url) {
-      const data = await spotifyGet(url);
+      const data = await spotifyGet(url, 'status');
       playlists = playlists.concat(data.items || []);
       url = data.next;
     }
