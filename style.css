@@ -19,7 +19,83 @@ body {
   padding: 2rem 1rem;
 }
 
-.container { max-width: 680px; margin: 0 auto; }
+.container { max-width: 680px; margin: 0 auto; position: relative; z-index: 1; }
+
+/* ---- Background waves ---- */
+.wave-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.wave {
+  position: absolute;
+  top: -10%;
+  width: 320px;
+  height: 120%;
+  will-change: transform, border-radius;
+}
+
+.wl1 {
+  left: -180px;
+  background: rgba(29, 185, 84, 0.08);
+  animation: waveL1 10s ease-in-out infinite;
+}
+.wl2 {
+  left: -230px;
+  background: rgba(255, 255, 255, 0.04);
+  animation: waveL2 14s ease-in-out infinite;
+}
+.wl3 {
+  left: -260px;
+  background: rgba(29, 185, 84, 0.04);
+  animation: waveL3 18s ease-in-out infinite;
+}
+.wr1 {
+  right: -180px;
+  background: rgba(29, 185, 84, 0.07);
+  animation: waveR1 12s ease-in-out infinite;
+}
+.wr2 {
+  right: -230px;
+  background: rgba(255, 255, 255, 0.035);
+  animation: waveR2 16s ease-in-out infinite;
+}
+.wr3 {
+  right: -260px;
+  background: rgba(29, 185, 84, 0.03);
+  animation: waveR3 20s ease-in-out infinite;
+}
+
+@keyframes waveL1 {
+  0%, 100% { border-radius: 60% 40% 35% 65% / 55% 35% 65% 45%; transform: translateY(0); }
+  30%       { border-radius: 35% 65% 60% 40% / 45% 60% 40% 55%; transform: translateY(-4%); }
+  60%       { border-radius: 50% 50% 40% 60% / 65% 35% 55% 45%; transform: translateY(3%); }
+}
+@keyframes waveL2 {
+  0%, 100% { border-radius: 45% 55% 60% 40% / 40% 65% 35% 60%; transform: translateY(0); }
+  40%       { border-radius: 60% 40% 45% 55% / 55% 45% 60% 40%; transform: translateY(5%); }
+  70%       { border-radius: 30% 70% 55% 45% / 60% 35% 50% 55%; transform: translateY(-3%); }
+}
+@keyframes waveL3 {
+  0%, 100% { border-radius: 55% 45% 40% 60% / 60% 40% 55% 45%; transform: translateY(2%); }
+  50%       { border-radius: 40% 60% 55% 45% / 45% 55% 40% 60%; transform: translateY(-5%); }
+}
+@keyframes waveR1 {
+  0%, 100% { border-radius: 40% 60% 65% 35% / 55% 45% 55% 45%; transform: translateY(0); }
+  35%       { border-radius: 65% 35% 40% 60% / 45% 55% 40% 60%; transform: translateY(-5%); }
+  65%       { border-radius: 50% 50% 55% 45% / 60% 40% 65% 35%; transform: translateY(3%); }
+}
+@keyframes waveR2 {
+  0%, 100% { border-radius: 55% 45% 35% 65% / 40% 60% 45% 55%; transform: translateY(2%); }
+  45%       { border-radius: 40% 60% 60% 40% / 60% 40% 55% 45%; transform: translateY(-4%); }
+}
+@keyframes waveR3 {
+  0%, 100% { border-radius: 60% 40% 50% 50% / 50% 60% 40% 55%; transform: translateY(-2%); }
+  55%       { border-radius: 45% 55% 40% 60% / 60% 35% 60% 40%; transform: translateY(4%); }
+}
 
 h1 {
   font-family: 'Syne', sans-serif;
