@@ -129,13 +129,21 @@ async function exchangeCode(code) {
 
 // ---- Spotify API ----
 async function spotifyGet(url) {
-  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
-  if (!res.ok) {
-    let errMsg = res.status + ' ' + res.statusText;
-    try { const e = await res.json(); errMsg = JSON.stringify(e); } catch (_) {}
-    throw new Error(errMsg);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
+    if (res.status === 429) {
+      const wait = (parseInt(res.headers.get('Retry-After') || '2') + 1) * 1000;
+      await new Promise(r => setTimeout(r, wait));
+      continue;
+    }
+    if (!res.ok) {
+      let errMsg = res.status + ' ' + res.statusText;
+      try { const e = await res.json(); errMsg = JSON.stringify(e); } catch (_) {}
+      throw new Error(errMsg);
+    }
+    return res.json();
   }
-  return res.json();
+  throw new Error('Too many requests. Try again in a moment.');
 }
 
 // ---- Load playlists ----
