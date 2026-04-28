@@ -612,7 +612,7 @@ async function startPlayback() {
   }
 })();
 
-// Floating sphere background
+// Floating circle background
 (function () {
   const canvas = document.createElement('canvas');
   canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;';
@@ -633,73 +633,60 @@ async function startPlayback() {
     mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY;
   }, { passive: true });
 
-  const spheres = Array.from({ length: 16 }, () => {
-    const green = Math.random() > 0.45;
+  function spawn(atRandom) {
+    const green = Math.random() > 0.42;
+    const r = 14 + Math.random() * 52;
     return {
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      r: 40 + Math.random() * 90,
-      vx: (Math.random() - 0.5) * 0.6,
-      vy: (Math.random() - 0.5) * 0.6,
+      x: Math.random() * (W || window.innerWidth),
+      y: atRandom ? Math.random() * (H || window.innerHeight) : (H || window.innerHeight) + r + Math.random() * 80,
+      r,
+      floatVy: -(0.22 + Math.random() * 0.38), // natural upward speed — varies per circle
+      vx: 0,
+      vy: 0,
       green,
     };
-  });
-
-  function drawSphere(s) {
-    // Offset highlight for 3-D sphere look
-    const g = ctx.createRadialGradient(
-      s.x - s.r * 0.3, s.y - s.r * 0.35, s.r * 0.05,
-      s.x, s.y, s.r
-    );
-    if (s.green) {
-      g.addColorStop(0,    'rgba(155, 255, 190, 0.95)');
-      g.addColorStop(0.22, 'rgba(29,  185,  84, 0.90)');
-      g.addColorStop(0.6,  'rgba(14,  100,  45, 0.85)');
-      g.addColorStop(1,    'rgba(4,   35,   18, 0.80)');
-    } else {
-      g.addColorStop(0,    'rgba(255, 255, 255, 0.95)');
-      g.addColorStop(0.22, 'rgba(215, 230, 255, 0.88)');
-      g.addColorStop(0.6,  'rgba(140, 170, 215, 0.82)');
-      g.addColorStop(1,    'rgba(60,  80,  130, 0.75)');
-    }
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = g;
-    ctx.fill();
   }
 
-  const REPEL_R = 175, REPEL_STR = 1.3, DRAG = 0.968, DRIFT = 0.018, MAX_SPD = 2.0;
-  const RETURN_MARGIN = 120; // how far off-screen before gentle pull-back kicks in
+  const circles = Array.from({ length: 20 }, () => spawn(true));
+
+  const REPEL_R = 130, REPEL_STR = 1.8;
 
   function tick() {
-    spheres.forEach(s => {
-      // Mouse / touch repulsion
-      const dx = s.x - mouseX, dy = s.y - mouseY;
+    circles.forEach((c, i) => {
+      // Mouse / touch push
+      const dx = c.x - mouseX, dy = c.y - mouseY;
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < REPEL_R && dist > 0) {
         const f = ((REPEL_R - dist) / REPEL_R) ** 2 * REPEL_STR;
-        s.vx += (dx / dist) * f;
-        s.vy += (dy / dist) * f;
+        c.vx += (dx / dist) * f;
+        c.vy += (dy / dist) * f;
       }
 
-      // Random drift so they keep wandering
-      s.vx += (Math.random() - 0.5) * DRIFT;
-      s.vy += (Math.random() - 0.5) * DRIFT;
+      // Gentle horizontal wobble
+      c.vx += (Math.random() - 0.5) * 0.025;
 
-      // Gentle pull back toward screen when well off-screen
-      if (s.x < -RETURN_MARGIN)  s.vx += 0.05;
-      if (s.x > W + RETURN_MARGIN) s.vx -= 0.05;
-      if (s.y < -RETURN_MARGIN)  s.vy += 0.05;
-      if (s.y > H + RETURN_MARGIN) s.vy -= 0.05;
+      // Decay extra velocity back toward natural float
+      c.vx *= 0.97;
+      c.vy = c.vy * 0.97 + c.floatVy * 0.03;
 
-      s.vx *= DRAG; s.vy *= DRAG;
-      const spd = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
-      if (spd > MAX_SPD) { s.vx *= MAX_SPD / spd; s.vy *= MAX_SPD / spd; }
-      s.x += s.vx; s.y += s.vy;
+      c.x += c.vx;
+      c.y += c.vy + c.floatVy;
+
+      // Wrap horizontally
+      if (c.x + c.r < 0) c.x = W + c.r;
+      if (c.x - c.r > W) c.x = -c.r;
+
+      // Respawn at bottom once fully off the top
+      if (c.y + c.r < 0) circles[i] = spawn(false);
     });
 
     ctx.clearRect(0, 0, W, H);
-    spheres.forEach(drawSphere);
+    circles.forEach(c => {
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+      ctx.fillStyle = c.green ? 'rgba(29, 185, 84, 0.38)' : 'rgba(255, 255, 255, 0.13)';
+      ctx.fill();
+    });
     requestAnimationFrame(tick);
   }
   tick();
