@@ -612,6 +612,87 @@ async function startPlayback() {
   }
 })();
 
+// Floating sphere background
+(function () {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;';
+  document.body.insertBefore(canvas, document.body.firstChild);
+  const ctx = canvas.getContext('2d');
+
+  let W = 0, H = 0;
+  let mouseX = -999, mouseY = -999;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+
+  const SPHERE_COUNT = 16;
+  const spheres = Array.from({ length: SPHERE_COUNT }, () => {
+    const green = Math.random() > 0.45;
+    return {
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: 35 + Math.random() * 85,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      green,
+      opacity: green ? 0.07 + Math.random() * 0.06 : 0.04 + Math.random() * 0.04,
+    };
+  });
+
+  function drawSphere(s) {
+    const g = ctx.createRadialGradient(
+      s.x - s.r * 0.28, s.y - s.r * 0.32, s.r * 0.04,
+      s.x, s.y, s.r
+    );
+    if (s.green) {
+      g.addColorStop(0,   `rgba(90, 230, 130, ${s.opacity * 1.5})`);
+      g.addColorStop(0.4, `rgba(29, 185, 84,  ${s.opacity})`);
+      g.addColorStop(1,   `rgba(10, 60,  30,  0)`);
+    } else {
+      g.addColorStop(0,   `rgba(255, 255, 255, ${s.opacity * 1.6})`);
+      g.addColorStop(0.4, `rgba(210, 230, 255, ${s.opacity})`);
+      g.addColorStop(1,   `rgba(100, 140, 200, 0)`);
+    }
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+  }
+
+  const REPEL_R = 170, REPEL_STR = 1.1, DRAG = 0.972, DRIFT = 0.012, MAX_SPD = 1.4;
+
+  function tick() {
+    spheres.forEach(s => {
+      const dx = s.x - mouseX, dy = s.y - mouseY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < REPEL_R && dist > 0) {
+        const f = ((REPEL_R - dist) / REPEL_R) ** 2 * REPEL_STR;
+        s.vx += (dx / dist) * f;
+        s.vy += (dy / dist) * f;
+      }
+      s.vx += (Math.random() - 0.5) * DRIFT;
+      s.vy += (Math.random() - 0.5) * DRIFT;
+      s.vx *= DRAG; s.vy *= DRAG;
+      const spd = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
+      if (spd > MAX_SPD) { s.vx *= MAX_SPD / spd; s.vy *= MAX_SPD / spd; }
+      s.x += s.vx; s.y += s.vy;
+      if (s.x < s.r)      { s.x = s.r;      s.vx = Math.abs(s.vx); }
+      if (s.x > W - s.r)  { s.x = W - s.r;  s.vx = -Math.abs(s.vx); }
+      if (s.y < s.r)      { s.y = s.r;       s.vy = Math.abs(s.vy); }
+      if (s.y > H - s.r)  { s.y = H - s.r;  s.vy = -Math.abs(s.vy); }
+    });
+    ctx.clearRect(0, 0, W, H);
+    spheres.forEach(drawSphere);
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
 // Cursor-reactive background parallax
 (function () {
   const waveBg = document.querySelector('.wave-bg');
