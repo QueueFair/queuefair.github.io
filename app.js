@@ -476,33 +476,16 @@ function buildQueue() {
   });
 
   if (equalSelection) {
-    // Weighted lottery: each round pick one person via weighted random,
-    // then add one of their songs. People picked fewer times than average
-    // get higher odds; people picked more than average get lower odds.
-    const picks = {};
-    members.forEach(uid => picks[uid] = 0);
+    // Round-based: each round gives every person with songs remaining exactly
+    // one slot, in a randomly shuffled order. Nobody can be more than 1 song
+    // ahead of anyone else, and streaks are capped at 2 (only if the same
+    // person happens to end one round and start the next).
     queueTracks = [];
-
     while (members.some(uid => pools[uid].length > 0)) {
-      const available = members.filter(uid => pools[uid].length > 0);
-      const N = available.length;
-      const avg = available.reduce((sum, uid) => sum + picks[uid], 0) / N;
-
-      const weights = {};
-      available.forEach(uid => {
-        weights[uid] = Math.max(1, Math.round(N + avg - picks[uid]));
-      });
-
-      const totalWeight = available.reduce((sum, uid) => sum + weights[uid], 0);
-      let rand = Math.random() * totalWeight;
-      let chosen = available[available.length - 1];
-      for (const uid of available) {
-        rand -= weights[uid];
-        if (rand <= 0) { chosen = uid; break; }
+      const round = shuffle(members.filter(uid => pools[uid].length > 0));
+      for (const uid of round) {
+        queueTracks.push(pools[uid].pop());
       }
-
-      queueTracks.push(pools[chosen].pop());
-      picks[chosen]++;
     }
   } else {
     queueTracks = shuffle(members.flatMap(uid => pools[uid]));
