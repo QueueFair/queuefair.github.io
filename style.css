@@ -86,7 +86,7 @@ h1 {
   font-family: 'Syne', sans-serif;
   font-weight: 800;
   font-style: italic;
-  font-size: clamp(3rem, 12vw, 5.5rem);
+  font-size: clamp(2.6rem, 12vw, 5.5rem);
   letter-spacing: -3px;
   line-height: 0.9;
   margin-bottom: 0.5rem;
@@ -107,6 +107,7 @@ h1 span {
   margin-bottom: 2.5rem;
   letter-spacing: 0.05em;
   padding-left: 1.4rem;
+  display: block;
 }
 
 /* ---- Cards ---- */
@@ -172,7 +173,7 @@ input[type="text"]::placeholder { color: var(--muted); }
 /* ---- Buttons ---- */
 .btn {
   background: var(--green);
-  border: 2px solid rgba(0,0,0,0.8);
+  border: 2px solid rgba(255,255,255,0.5);
   border-radius: 12px;
   color: #000;
   cursor: pointer;
@@ -183,17 +184,16 @@ input[type="text"]::placeholder { color: var(--muted); }
   padding: 0.75rem 1.4rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  white-space: nowrap;
-  box-shadow: 4px 4px 0 rgba(255,255,255,0.45);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.7);
   transition: transform 0.08s, box-shadow 0.08s;
 }
 .btn:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 rgba(255,255,255,0.45);
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.7);
 }
 .btn:active {
   transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0 rgba(255,255,255,0.45);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.7);
 }
 .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
 .btn-full { width: 100%; padding: 0.95rem; font-size: 1rem; }
@@ -582,3 +582,31 @@ input[type="text"]::placeholder { color: var(--muted); }
 
 .toggle-row { display: flex; align-items: center; margin-bottom: 0.8rem; }
 .toggle-row .equal-toggle { margin-bottom: 0; flex: 1; }
+
+/* ---- Mobile ---- */
+@media (max-width: 480px) {
+  body { padding: 1.2rem 0.8rem; }
+
+  h1 {
+    font-size: clamp(2.2rem, 14vw, 3.2rem);
+    letter-spacing: -2px;
+    border-left-width: 4px;
+    padding-left: 0.7rem;
+  }
+
+  .card { padding: 1.1rem; border-radius: 14px; }
+
+  .btn { font-size: 0.82rem; padding: 0.7rem 1rem; }
+  .btn-full { font-size: 0.9rem; padding: 0.85rem; }
+
+  .playlist-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.6rem; }
+  .members-grid  { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.5rem; }
+
+  .member-chip { font-size: 0.72rem; padding: 0.45rem 0.75rem; }
+
+  .track-count { font-size: 2.2rem; }
+
+  .stats-row { gap: 1.2rem; }
+
+  .info-icon::after { width: 160px; left: 0; transform: none; }
+}

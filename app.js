@@ -620,7 +620,7 @@ async function startPlayback() {
   const ctx = canvas.getContext('2d');
 
   let W = 0, H = 0;
-  let mouseX = -999, mouseY = -999;
+  let mouseX = -9999, mouseY = -9999;
 
   function resize() {
     W = canvas.width = window.innerWidth;
@@ -629,34 +629,38 @@ async function startPlayback() {
   resize();
   window.addEventListener('resize', resize);
   document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+  document.addEventListener('touchmove', e => {
+    mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY;
+  }, { passive: true });
 
-  const SPHERE_COUNT = 16;
-  const spheres = Array.from({ length: SPHERE_COUNT }, () => {
+  const spheres = Array.from({ length: 16 }, () => {
     const green = Math.random() > 0.45;
     return {
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      r: 35 + Math.random() * 85,
-      vx: (Math.random() - 0.5) * 0.35,
-      vy: (Math.random() - 0.5) * 0.35,
+      r: 40 + Math.random() * 90,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: (Math.random() - 0.5) * 0.6,
       green,
-      opacity: green ? 0.07 + Math.random() * 0.06 : 0.04 + Math.random() * 0.04,
     };
   });
 
   function drawSphere(s) {
+    // Offset highlight for 3-D sphere look
     const g = ctx.createRadialGradient(
-      s.x - s.r * 0.28, s.y - s.r * 0.32, s.r * 0.04,
+      s.x - s.r * 0.3, s.y - s.r * 0.35, s.r * 0.05,
       s.x, s.y, s.r
     );
     if (s.green) {
-      g.addColorStop(0,   `rgba(90, 230, 130, ${s.opacity * 1.5})`);
-      g.addColorStop(0.4, `rgba(29, 185, 84,  ${s.opacity})`);
-      g.addColorStop(1,   `rgba(10, 60,  30,  0)`);
+      g.addColorStop(0,    'rgba(155, 255, 190, 0.95)');
+      g.addColorStop(0.22, 'rgba(29,  185,  84, 0.90)');
+      g.addColorStop(0.6,  'rgba(14,  100,  45, 0.85)');
+      g.addColorStop(1,    'rgba(4,   35,   18, 0.80)');
     } else {
-      g.addColorStop(0,   `rgba(255, 255, 255, ${s.opacity * 1.6})`);
-      g.addColorStop(0.4, `rgba(210, 230, 255, ${s.opacity})`);
-      g.addColorStop(1,   `rgba(100, 140, 200, 0)`);
+      g.addColorStop(0,    'rgba(255, 255, 255, 0.95)');
+      g.addColorStop(0.22, 'rgba(215, 230, 255, 0.88)');
+      g.addColorStop(0.6,  'rgba(140, 170, 215, 0.82)');
+      g.addColorStop(1,    'rgba(60,  80,  130, 0.75)');
     }
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
@@ -664,10 +668,12 @@ async function startPlayback() {
     ctx.fill();
   }
 
-  const REPEL_R = 170, REPEL_STR = 1.1, DRAG = 0.972, DRIFT = 0.012, MAX_SPD = 1.4;
+  const REPEL_R = 175, REPEL_STR = 1.3, DRAG = 0.968, DRIFT = 0.018, MAX_SPD = 2.0;
+  const RETURN_MARGIN = 120; // how far off-screen before gentle pull-back kicks in
 
   function tick() {
     spheres.forEach(s => {
+      // Mouse / touch repulsion
       const dx = s.x - mouseX, dy = s.y - mouseY;
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < REPEL_R && dist > 0) {
@@ -675,17 +681,23 @@ async function startPlayback() {
         s.vx += (dx / dist) * f;
         s.vy += (dy / dist) * f;
       }
+
+      // Random drift so they keep wandering
       s.vx += (Math.random() - 0.5) * DRIFT;
       s.vy += (Math.random() - 0.5) * DRIFT;
+
+      // Gentle pull back toward screen when well off-screen
+      if (s.x < -RETURN_MARGIN)  s.vx += 0.05;
+      if (s.x > W + RETURN_MARGIN) s.vx -= 0.05;
+      if (s.y < -RETURN_MARGIN)  s.vy += 0.05;
+      if (s.y > H + RETURN_MARGIN) s.vy -= 0.05;
+
       s.vx *= DRAG; s.vy *= DRAG;
       const spd = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
       if (spd > MAX_SPD) { s.vx *= MAX_SPD / spd; s.vy *= MAX_SPD / spd; }
       s.x += s.vx; s.y += s.vy;
-      if (s.x < s.r)      { s.x = s.r;      s.vx = Math.abs(s.vx); }
-      if (s.x > W - s.r)  { s.x = W - s.r;  s.vx = -Math.abs(s.vx); }
-      if (s.y < s.r)      { s.y = s.r;       s.vy = Math.abs(s.vy); }
-      if (s.y > H - s.r)  { s.y = H - s.r;  s.vy = -Math.abs(s.vy); }
     });
+
     ctx.clearRect(0, 0, W, H);
     spheres.forEach(drawSphere);
     requestAnimationFrame(tick);
