@@ -612,6 +612,47 @@ async function startPlayback() {
   }
 })();
 
+// Floating circles inside .btn-full buttons
+function initButtonBubbles(btn) {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;border-radius:inherit;';
+  btn.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  // Fixed internal resolution — CSS scales it to the real button size
+  const IW = 320, IH = 60;
+  canvas.width = IW;
+  canvas.height = IH;
+
+  const circles = Array.from({ length: 9 }, () => ({
+    x: Math.random() * IW,
+    y: IH + Math.random() * IH,
+    r: 4 + Math.random() * 13,
+    vy: -(0.45 + Math.random() * 0.65),
+    vx: (Math.random() - 0.5) * 0.3,
+  }));
+
+  function tick() {
+    ctx.clearRect(0, 0, IW, IH);
+    circles.forEach((c, i) => {
+      c.vx += (Math.random() - 0.5) * 0.04;
+      c.vx *= 0.97;
+      c.x += c.vx;
+      c.y += c.vy;
+      if (c.y + c.r < 0)   { c.x = Math.random() * IW; c.y = IH + c.r; }
+      if (c.x + c.r < 0)   c.x = IW + c.r;
+      if (c.x - c.r > IW)  c.x = -c.r;
+
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fill();
+    });
+    requestAnimationFrame(tick);
+  }
+  tick();
+}
+
 // Floating circle background
 (function () {
   const canvas = document.createElement('canvas');
@@ -702,6 +743,8 @@ async function startPlayback() {
   }
   tick();
 })();
+
+document.querySelectorAll('.btn-full').forEach(initButtonBubbles);
 
 // Cursor-reactive background parallax
 (function () {
