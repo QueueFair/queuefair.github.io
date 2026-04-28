@@ -633,17 +633,28 @@ async function startPlayback() {
     mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY;
   }, { passive: true });
 
+  const COLORS = [
+    'rgba(29, 185, 84,  0.45)', // main green
+    'rgba(20, 130, 58,  0.50)', // dark green
+    'rgba(80, 210, 120, 0.35)', // light green
+    'rgba(12,  90, 40,  0.55)', // deep green
+    'rgba(140, 140, 140, 0.22)', // mid gray
+    'rgba(80,  80,  80,  0.28)', // dark gray
+    'rgba(190, 190, 190, 0.18)', // light gray
+    'rgba(255, 255, 255, 0.14)', // white
+    'rgba(220, 220, 220, 0.16)', // off-white
+  ];
+
   function spawn(atRandom) {
-    const green = Math.random() > 0.42;
     const r = 14 + Math.random() * 52;
     return {
       x: Math.random() * (W || window.innerWidth),
       y: atRandom ? Math.random() * (H || window.innerHeight) : (H || window.innerHeight) + r + Math.random() * 80,
       r,
-      floatVy: -(0.22 + Math.random() * 0.38), // natural upward speed — varies per circle
+      floatVy: -(0.22 + Math.random() * 0.38),
       vx: 0,
       vy: 0,
-      green,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
     };
   }
 
@@ -684,7 +695,7 @@ async function startPlayback() {
     circles.forEach(c => {
       ctx.beginPath();
       ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-      ctx.fillStyle = c.green ? 'rgba(29, 185, 84, 0.38)' : 'rgba(255, 255, 255, 0.13)';
+      ctx.fillStyle = c.color;
       ctx.fill();
     });
     requestAnimationFrame(tick);
