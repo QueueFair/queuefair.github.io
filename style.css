@@ -102,7 +102,7 @@ h1 span {
 .subtitle {
   color: var(--muted);
   font-size: 0.75rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
   letter-spacing: 0.05em;
   padding-left: 1.4rem;
   display: block;
@@ -523,6 +523,7 @@ input[type="text"]::placeholder { color: var(--muted); }
   border-color: rgba(255,255,255,0.28);
   color: rgba(255,255,255,0.5);
   box-shadow: 3px 3px 0 rgba(255,255,255,0.07);
+  font-style: normal;
 }
 .btn-reroll:hover {
   border-color: rgba(255,255,255,0.6);
@@ -538,6 +539,7 @@ input[type="text"]::placeholder { color: var(--muted); }
   border-color: #e05;
   color: #e05;
   box-shadow: 3px 3px 0 rgba(238,0,85,0.3);
+  font-style: normal;
 }
 .btn-stop:hover {
   background: rgba(238,0,85,0.06);
