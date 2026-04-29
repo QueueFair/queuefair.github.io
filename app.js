@@ -85,11 +85,61 @@ function shuffle(arr) {
   return a;
 }
 
-document.addEventListener('click', e => {
-  const icon = e.target.closest('.info-icon');
-  document.querySelectorAll('.info-icon.open').forEach(el => { if (el !== icon) el.classList.remove('open'); });
-  if (icon) { e.preventDefault(); icon.classList.toggle('open'); }
-});
+(function () {
+  const tip = document.createElement('div');
+  tip.className = 'tooltip-popup';
+  tip.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(tip);
+  let current = null;
+
+  function show(icon) {
+    tip.textContent = icon.dataset.tooltip || '';
+    const r = icon.getBoundingClientRect();
+    const w = 200;
+    const left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 8));
+    tip.style.left = left + 'px';
+    tip.style.top = (r.bottom + 8) + 'px';
+    tip.classList.add('open');
+    icon.classList.add('open');
+    current = icon;
+  }
+
+  function hide() {
+    tip.classList.remove('open');
+    if (current) { current.classList.remove('open'); current = null; }
+  }
+
+  // Hover for desktop
+  document.addEventListener('mouseover', e => {
+    const icon = e.target.closest('.info-icon');
+    if (icon) show(icon);
+  });
+  document.addEventListener('mouseout', e => {
+    if (e.target.closest('.info-icon')) hide();
+  });
+
+  // Touch: preventDefault stops the synthetic click that causes double-fire
+  document.addEventListener('touchstart', e => {
+    const icon = e.target.closest('.info-icon');
+    if (icon) {
+      e.preventDefault();
+      current === icon ? hide() : show(icon);
+    } else {
+      hide();
+    }
+  }, { passive: false });
+
+  // Click for non-touch
+  document.addEventListener('click', e => {
+    const icon = e.target.closest('.info-icon');
+    if (icon) {
+      e.preventDefault();
+      current === icon ? hide() : show(icon);
+    } else {
+      hide();
+    }
+  });
+})();
 
 // ---- OAuth PKCE ----
 async function sha256(plain) {
