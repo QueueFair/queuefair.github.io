@@ -226,7 +226,8 @@ async function spotifyGet(url) {
     const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
     if (res.status === 429) {
       const retryAfter = parseInt(res.headers.get('Retry-After') || '1');
-      await new Promise(r => setTimeout(r, retryAfter * Math.pow(2, attempt) * 1000));
+      const wait = Math.min(retryAfter * Math.pow(2, attempt), 30) * 1000;
+      await new Promise(r => setTimeout(r, wait));
       continue;
     }
     if (!res.ok) {
@@ -245,11 +246,11 @@ async function loadPlaylists() {
   $('playlist-grid').innerHTML = '<div class="loading">Loading your playlists…</div>';
 
   try {
-    let playlists = [];
+    const playlists = [];
     let url = 'https://api.spotify.com/v1/me/playlists?limit=50';
     while (url) {
       const data = await spotifyGet(url);
-      playlists = playlists.concat(data.items || []);
+      playlists.push(...(data.items || []));
       url = data.next;
     }
 
@@ -383,8 +384,10 @@ function renderMembersGrid() {
     showManualMode();
     return;
   }
+  const trackCounts = {};
+  allTracks.forEach(t => { trackCounts[t.addedBy] = (trackCounts[t.addedBy] || 0) + 1; });
   users.forEach(uid => {
-    const trackCount = allTracks.filter(t => t.addedBy === uid).length;
+    const trackCount = trackCounts[uid] || 0;
     const chip = document.createElement('div');
     chip.className = 'member-chip';
 
@@ -431,7 +434,6 @@ function renderMembersGrid() {
     nameWrap.appendChild(nameRow);
     nameWrap.insertAdjacentHTML('beforeend', `<span style="font-size:0.6rem;color:var(--muted)">${trackCount} songs</span>`);
 
-    chip.innerHTML = '';
     chip.appendChild(document.createElement('div')).className = 'dot';
     chip.appendChild(nameWrap);
     chip.addEventListener('click', () => {
@@ -560,6 +562,7 @@ function buildQueue() {
 
   const list = $('track-list');
   list.innerHTML = '';
+  const frag = document.createDocumentFragment();
   queueTracks.forEach((t, i) => {
     const div = document.createElement('div');
     div.className = 'track-item';
@@ -570,8 +573,9 @@ function buildQueue() {
         <div class="track-artist">${esc(t.artist)}</div>
       </div>
       <div class="track-added">${esc(memberMap[t.addedBy] || t.addedBy)}</div>`;
-    list.appendChild(div);
+    frag.appendChild(div);
   });
+  list.appendChild(frag);
 
   showStep('step-queue');
 }

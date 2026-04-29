@@ -5,7 +5,6 @@
   --dark: #080808;
   --card: #0e0e0e;
   --border: rgba(255, 255, 255, 0.08);
-  --border-green: rgba(29, 185, 84, 0.2);
   --text: #f0f0f0;
   --muted: #555;
 }
@@ -553,20 +552,6 @@ input[type="text"]::placeholder { color: var(--muted); }
   color: #fff;
   background: transparent;
   box-shadow: 5px 5px 0 rgba(255,255,255,0.14);
-}
-
-.btn-stop {
-  width: 100%;
-  margin-top: 0.6rem;
-  background: transparent;
-  border-color: #e05;
-  color: #e05;
-  box-shadow: 3px 3px 0 rgba(238,0,85,0.3);
-  font-style: normal;
-}
-.btn-stop:hover {
-  background: rgba(238,0,85,0.06);
-  box-shadow: 5px 5px 0 rgba(238,0,85,0.3);
 }
 
 /* ---- Info icon & tooltip ---- */
