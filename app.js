@@ -612,6 +612,7 @@ async function startPlayback() {
     const device = devData.devices?.find(d => d.is_active) || devData.devices?.[0];
     if (!device) {
       setStatus('status3', '✗ No active device found. Open Spotify and play something first.', 'err');
+      $('spotify-notice').hidden = false;
       return;
     }
 
@@ -627,6 +628,7 @@ async function startPlayback() {
       throw new Error(errMsg);
     }
 
+    $('spotify-notice').hidden = true;
     setStatus('status3', `✓ ${queueTracks.length} tracks sent to "${device.name}"`, 'ok');
   } catch (e) {
     setStatus('status3', '✗ ' + e.message, 'err');
