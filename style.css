@@ -228,7 +228,14 @@ input[type="text"]::placeholder { color: var(--muted); }
 
 /* ---- Steps ---- */
 .step { display: none; }
-.step.active { display: block; }
+.step.active {
+  display: block;
+  animation: stepFadeIn 0.22s ease-out;
+}
+@keyframes stepFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 .back-btn {
   background: none;
@@ -249,6 +256,11 @@ input[type="text"]::placeholder { color: var(--muted); }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 0.8rem;
+  max-height: clamp(400px, 62vh, 620px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #333 transparent;
+  padding-right: 2px;
 }
 
 .playlist-card {
@@ -356,10 +368,11 @@ input[type="text"]::placeholder { color: var(--muted); }
 .divider { border: none; border-top: 2px solid rgba(255,255,255,0.07); margin: 1rem 0; }
 
 .track-list {
-  max-height: 260px;
+  max-height: clamp(260px, 42vh, 440px);
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #222 transparent;
+  scrollbar-color: #333 transparent;
+  scroll-behavior: smooth;
 }
 .track-item {
   display: flex;
@@ -391,7 +404,17 @@ input[type="text"]::placeholder { color: var(--muted); }
   text-overflow: ellipsis;
 }
 
-.loading { color: var(--muted); font-size: 0.8rem; padding: 2rem 0; text-align: center; }
+.loading {
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 2rem 0;
+  text-align: center;
+  animation: loadPulse 1.8s ease-in-out infinite;
+}
+@keyframes loadPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
 
 /* ---- Manual member entry ---- */
 .members-grid.manual { display: block; }
@@ -510,7 +533,7 @@ input[type="text"]::placeholder { color: var(--muted); }
   font-weight: 800;
   font-style: italic;
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--text);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }

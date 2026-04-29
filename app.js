@@ -453,8 +453,8 @@ function selectAll(val) {
 
 // ---- Build queue ----
 function buildQueue() {
-  if (manualMode && Object.keys(manualMembers).length === 0) { alert('Add at least one person first!'); return; }
-  if (activeMembers.size === 0) { alert('Select at least one person!'); return; }
+  if (manualMode && Object.keys(manualMembers).length === 0) { setStatus('status2', '✗ Add at least one person first.', 'err'); return; }
+  if (activeMembers.size === 0) { setStatus('status2', '✗ Select at least one person.', 'err'); return; }
 
   let filtered;
   if (manualMode) {
@@ -464,7 +464,7 @@ function buildQueue() {
     filtered = allTracks.filter(t => activeMembers.has(t.addedBy));
   }
 
-  if (filtered.length === 0) { alert('No tracks found for selected members.'); return; }
+  if (filtered.length === 0) { setStatus('status2', '✗ No tracks found for selected members.', 'err'); return; }
 
   const equalSelection = $('equalSelection')?.checked;
 
@@ -515,6 +515,8 @@ function buildQueue() {
 async function startPlayback() {
   if (!queueTracks.length) return;
   queueCancelled = false;
+  const playBtn = $('play-btn');
+  if (playBtn) { playBtn.disabled = true; playBtn.textContent = 'Connecting...'; }
   $('stop-btn').style.display = '';
   setStatus('status3', 'Finding active device...');
   try {
@@ -546,6 +548,7 @@ async function startPlayback() {
       }
       if (i % 50 === 0) await ensureFreshToken();
       setStatus('status3', `Queuing tracks... ${i} / ${queueTracks.length - 1}`);
+      if (playBtn) playBtn.textContent = `Queueing ${i} / ${queueTracks.length - 1}...`;
       let res;
       for (let attempt = 0; attempt < 5; attempt++) {
         res = await fetch(
@@ -572,6 +575,7 @@ async function startPlayback() {
     setStatus('status3', '✗ ' + e.message, 'err');
   } finally {
     $('stop-btn').style.display = 'none';
+    if (playBtn) { playBtn.disabled = false; playBtn.textContent = '→ Play on Spotify Now'; }
   }
 }
 
