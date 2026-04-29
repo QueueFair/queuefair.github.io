@@ -661,8 +661,7 @@ async function startPlayback() {
     const devData = await spotifyGet('https://api.spotify.com/v1/me/player/devices');
     const device = devData.devices?.find(d => d.is_active) || devData.devices?.[0];
     if (!device) {
-      setStatus('status3', '✗ No active device found. Open Spotify and play something first.', 'err');
-      $('spotify-notice').hidden = false;
+      setStatus('status3', '✗ No active device found. Open Spotify and play something first, then try again.', 'err');
       triggerCircleFlash('rgba(220, 50, 50, 0.85)', 2, 1000);
       return;
     }
@@ -681,7 +680,6 @@ async function startPlayback() {
       throw new Error(errMsg);
     }
 
-    $('spotify-notice').hidden = true;
     const truncated = queueTracks.length > MAX_URIS ? ` (first ${MAX_URIS} of ${queueTracks.length})` : '';
     setStatus('status3', `✓ ${uris.length} tracks sent to "${device.name}"${truncated}`, 'ok');
     triggerCircleFlash('rgba(50, 220, 100, 0.90)', -2, 1000);
@@ -852,7 +850,16 @@ function initButtonBubbles(btn) {
 
   const circles = Array.from({ length: 20 }, () => spawn(true));
 
-  const REPEL_R = 130, REPEL_STR = 1.8;
+  const REPEL_R = 130, REPEL_R2 = REPEL_R * REPEL_R, REPEL_STR = 1.8;
+
+  function resetCircle(c) {
+    c.x = Math.random() * W;
+    c.y = H + c.r + Math.random() * 80;
+    c.floatVy = -(0.22 + Math.random() * 0.38);
+    c.vx = 0;
+    c.vy = 0;
+    c.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+  }
 
   function tick() {
     const now = performance.now();
@@ -867,34 +874,28 @@ function initButtonBubbles(btn) {
       }
     }
 
-    circles.forEach((c, i) => {
-      // Mouse / touch push
+    circles.forEach(c => {
+      // Mouse / touch push — sqrt only when inside repel radius
       const dx = c.x - mouseX, dy = c.y - mouseY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < REPEL_R && dist > 0) {
-        const f = ((REPEL_R - dist) / REPEL_R) ** 2 * REPEL_STR;
-        c.vx += (dx / dist) * f;
-        c.vy += (dy / dist) * f;
+      const dist2 = dx * dx + dy * dy;
+      if (dist2 < REPEL_R2 && dist2 > 0) {
+        const dist = Math.sqrt(dist2);
+        const t = (REPEL_R - dist) / REPEL_R;
+        c.vx += (dx / dist) * t * t * REPEL_STR;
+        c.vy += (dy / dist) * t * t * REPEL_STR;
       }
 
-      // Gentle horizontal wobble
       c.vx += (Math.random() - 0.5) * 0.025;
-
-      // Decay extra velocity back toward natural float
       c.vx *= 0.97;
       c.vy = c.vy * 0.97 + c.floatVy * 0.03;
 
       c.x += c.vx;
       c.y += c.vy + c.floatVy + (flashBlend === 1 ? flash.vyBoost : 0);
 
-      // Wrap horizontally
       if (c.x + c.r < 0) c.x = W + c.r;
       if (c.x - c.r > W) c.x = -c.r;
 
-      // Respawn at bottom once fully off the top
-      if (c.y + c.r < 0) circles[i] = spawn(false);
-      // Respawn at top if pushed off bottom during downward flash
-      if (c.y - c.r > H) circles[i] = spawn(false);
+      if (c.y + c.r < 0 || c.y - c.r > H) resetCircle(c);
     });
 
     ctx.clearRect(0, 0, W, H);
@@ -906,10 +907,10 @@ function initButtonBubbles(btn) {
     });
     if (flashBlend > 0) {
       ctx.globalAlpha = flashBlend;
+      ctx.fillStyle = flash.color;
       circles.forEach(c => {
         ctx.beginPath();
         ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-        ctx.fillStyle = flash.color;
         ctx.fill();
       });
       ctx.globalAlpha = 1;
