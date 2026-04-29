@@ -807,10 +807,11 @@ function initButtonBubbles(btn) {
 
   let W = 0, H = 0;
   let mouseX = -9999, mouseY = -9999;
-  let flash = { active: false, color: null, vyBoost: 0, until: 0 };
+  let flash = { active: false, color: null, vyBoost: 0, until: 0, fadeTo: 0 };
 
-  window.triggerCircleFlash = function (color, vyBoost, duration) {
-    flash = { active: true, color, vyBoost, until: performance.now() + duration };
+  window.triggerCircleFlash = function (color, vyBoost, duration, fadeDuration = 600) {
+    const now = performance.now();
+    flash = { active: true, color, vyBoost, until: now + duration, fadeTo: now + duration + fadeDuration };
   };
 
   function resize() {
@@ -855,8 +856,16 @@ function initButtonBubbles(btn) {
 
   function tick() {
     const now = performance.now();
-    const flashing = flash.active && now < flash.until;
-    if (flash.active && now >= flash.until) flash.active = false;
+    let flashBlend = 0;
+    if (flash.active) {
+      if (now < flash.until) {
+        flashBlend = 1;
+      } else if (now < flash.fadeTo) {
+        flashBlend = 1 - (now - flash.until) / (flash.fadeTo - flash.until);
+      } else {
+        flash.active = false;
+      }
+    }
 
     circles.forEach((c, i) => {
       // Mouse / touch push
@@ -876,7 +885,7 @@ function initButtonBubbles(btn) {
       c.vy = c.vy * 0.97 + c.floatVy * 0.03;
 
       c.x += c.vx;
-      c.y += c.vy + c.floatVy + (flashing ? flash.vyBoost : 0);
+      c.y += c.vy + c.floatVy + (flashBlend === 1 ? flash.vyBoost : 0);
 
       // Wrap horizontally
       if (c.x + c.r < 0) c.x = W + c.r;
@@ -892,9 +901,19 @@ function initButtonBubbles(btn) {
     circles.forEach(c => {
       ctx.beginPath();
       ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-      ctx.fillStyle = flashing ? flash.color : c.color;
+      ctx.fillStyle = c.color;
       ctx.fill();
     });
+    if (flashBlend > 0) {
+      ctx.globalAlpha = flashBlend;
+      circles.forEach(c => {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+        ctx.fillStyle = flash.color;
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    }
     requestAnimationFrame(tick);
   }
   tick();
