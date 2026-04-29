@@ -633,6 +633,12 @@ input[type="text"]::placeholder { color: var(--muted); }
   opacity: 0;
   margin-bottom: 0;
 }
+.mode-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
 .mode-chip {
   flex: 1;
   background: #0a0a0a;
