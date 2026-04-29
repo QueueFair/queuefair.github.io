@@ -382,6 +382,31 @@ input[type="text"]::placeholder { color: var(--muted); }
   font-size: 0.75rem;
 }
 .track-item:last-child { border-bottom: none; }
+
+@keyframes rerollOut {
+  0%   { opacity: 1; filter: blur(0);    transform: scale(1); }
+  100% { opacity: 0; filter: blur(10px); transform: scale(0.96); }
+}
+@keyframes rerollIn {
+  from { opacity: 0; transform: translateY(-14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes spinOnce {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+.track-list.rolling-out {
+  animation: rerollOut 0.18s ease-in forwards;
+  pointer-events: none;
+}
+.track-item.rolling-in {
+  opacity: 0;
+  animation: rerollIn 0.24s ease-out forwards;
+}
+.reroll-icon { display: inline-block; }
+.btn-reroll.spinning .reroll-icon {
+  animation: spinOnce 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
 .track-num {
   color: var(--muted);
   width: 1.5rem;

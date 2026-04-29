@@ -560,12 +560,35 @@ function buildQueue() {
   $('q-count').textContent = queueTracks.length;
   $('q-members').textContent = activeMembers.size;
 
+  const rerolling = $('step-queue').classList.contains('active');
+  const rerollBtn = $('reroll-btn');
+
+  if (rerolling) {
+    if (rerollBtn) {
+      rerollBtn.classList.remove('spinning');
+      void rerollBtn.offsetWidth; // restart animation if clicked again quickly
+      rerollBtn.classList.add('spinning');
+    }
+    const list = $('track-list');
+    list.classList.add('rolling-out');
+    setTimeout(() => {
+      list.classList.remove('rolling-out');
+      renderTrackList();
+    }, 190);
+  } else {
+    renderTrackList();
+    showStep('step-queue');
+  }
+}
+
+function renderTrackList() {
   const list = $('track-list');
   list.innerHTML = '';
   const frag = document.createDocumentFragment();
   queueTracks.forEach((t, i) => {
     const div = document.createElement('div');
-    div.className = 'track-item';
+    div.className = 'track-item rolling-in';
+    div.style.animationDelay = Math.min(i, 12) * 36 + 'ms';
     div.innerHTML = `
       <div class="track-num">${i + 1}</div>
       <div class="track-info">
@@ -576,8 +599,6 @@ function buildQueue() {
     frag.appendChild(div);
   });
   list.appendChild(frag);
-
-  showStep('step-queue');
 }
 
 // ---- Playback ----
