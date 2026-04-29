@@ -746,24 +746,18 @@ function initButtonBubbles(btn) {
     rotSpeed: (Math.random() - 0.5) * 0.018,
   }));
 
-  function syncSize() {
-    const bw = btn.clientWidth, bh = btn.clientHeight;
+  new ResizeObserver(entries => {
+    const { width: bw, height: bh } = entries[0].contentRect;
     if (bw === 0 || bh === 0) return;
-    if (canvas.width !== bw || canvas.height !== bh) {
-      canvas.width = bw; canvas.height = bh;
-      W = bw; H = bh;
-    }
+    canvas.width = bw; canvas.height = bh;
+    W = bw; H = bh;
     if (!ready) {
-      shapes.forEach(s => {
-        s.x = Math.random() * W;
-        s.y = H + Math.random() * H;
-      });
+      shapes.forEach(s => { s.x = Math.random() * W; s.y = H + Math.random() * H; });
       ready = true;
     }
-  }
+  }).observe(btn);
 
   function tick() {
-    syncSize();
     if (!ready) { requestAnimationFrame(tick); return; }
 
     ctx.clearRect(0, 0, W, H);
@@ -776,20 +770,17 @@ function initButtonBubbles(btn) {
       s.y += s.vy;
       s.rot += s.rotSpeed;
 
-      if (s.y + s.size < 0)  { s.x = Math.random() * W; s.y = H + s.size; }
-      if (s.x + s.size < 0)  s.x = W + s.size;
-      if (s.x - s.size > W)  s.x = -s.size;
+      if (s.y + s.size < 0) { s.x = Math.random() * W; s.y = H + s.size; }
+      if (s.x + s.size < 0) s.x = W + s.size;
+      if (s.x - s.size > W) s.x = -s.size;
 
-      ctx.save();
-      ctx.translate(s.x, s.y);
-      ctx.rotate(s.rot);
+      const cos = Math.cos(s.rot), sin = Math.sin(s.rot), sz = s.size;
       ctx.beginPath();
-      ctx.moveTo(0, -s.size);
-      ctx.lineTo( s.size * 0.866,  s.size * 0.5);
-      ctx.lineTo(-s.size * 0.866,  s.size * 0.5);
+      ctx.moveTo(s.x + sz * sin,                           s.y - sz * cos);
+      ctx.lineTo(s.x + sz * (0.866 * cos - 0.5 * sin),   s.y + sz * (0.866 * sin + 0.5 * cos));
+      ctx.lineTo(s.x + sz * (-0.866 * cos - 0.5 * sin),  s.y + sz * (-0.866 * sin + 0.5 * cos));
       ctx.closePath();
       ctx.fill();
-      ctx.restore();
     });
     requestAnimationFrame(tick);
   }
