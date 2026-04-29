@@ -23,6 +23,7 @@ let manualMembers = {};
 let manualIdCounter = 0;
 let loadingPlaylist = false;
 let queueCancelled = false;
+let equalMode = 'songs'; // 'songs' | 'time'
 
 // ---- Helpers ----
 function $(id) { return document.getElementById(id); }
@@ -62,6 +63,17 @@ function backFromQueue() {
 
 function stopQueueing() {
   queueCancelled = true;
+}
+
+function toggleEqualMode(on) {
+  const row = $('equal-mode-row');
+  if (row) row.classList.toggle('collapsed', !on);
+}
+
+function setEqualMode(mode) {
+  equalMode = mode;
+  $('mode-songs').classList.toggle('active', mode === 'songs');
+  $('mode-time').classList.toggle('active', mode === 'time');
 }
 
 function shuffle(arr) {
@@ -279,6 +291,7 @@ async function selectPlaylist(pl) {
             artist: track.artists?.map(a => a.name).join(', ') || '',
             addedBy: userId,
             uri: track.uri,
+            duration_ms: track.duration_ms || 0,
           });
           if (userId && userId !== 'unknown') memberMap[userId] = userId;
         }
@@ -475,17 +488,26 @@ function buildQueue() {
     pools[uid] = shuffle(filtered.filter(t => t.addedBy === uid));
   });
 
-  if (equalSelection) {
-    // Round-based: each round gives every person with songs remaining exactly
-    // one slot, in a randomly shuffled order. Nobody can be more than 1 song
-    // ahead of anyone else, and streaks are capped at 2 (only if the same
-    // person happens to end one round and start the next).
+  if (equalSelection && equalMode === 'time') {
+    // Greedy time scheduler: always pick from whoever has the least
+    // accumulated listening time. Falls back to ~3.5 min if duration missing.
+    const totalMs = {};
+    members.forEach(uid => { totalMs[uid] = 0; });
+    queueTracks = [];
+    while (members.some(uid => pools[uid].length > 0)) {
+      const eligible = shuffle(members.filter(uid => pools[uid].length > 0));
+      eligible.sort((a, b) => totalMs[a] - totalMs[b]);
+      const uid = eligible[0];
+      const track = pools[uid].pop();
+      queueTracks.push(track);
+      totalMs[uid] += track.duration_ms || 210000;
+    }
+  } else if (equalSelection) {
+    // Round-robin by song count: each person gets one slot per round.
     queueTracks = [];
     while (members.some(uid => pools[uid].length > 0)) {
       const round = shuffle(members.filter(uid => pools[uid].length > 0));
-      for (const uid of round) {
-        queueTracks.push(pools[uid].pop());
-      }
+      for (const uid of round) queueTracks.push(pools[uid].pop());
     }
   } else {
     queueTracks = shuffle(members.flatMap(uid => pools[uid]));

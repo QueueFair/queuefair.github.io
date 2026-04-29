@@ -53,10 +53,14 @@
     </div>
     <div class="toggle-row">
       <label class="equal-toggle">
-        <input type="checkbox" id="equalSelection" checked>
+        <input type="checkbox" id="equalSelection" checked onchange="toggleEqualMode(this.checked)">
         <span class="equal-toggle-box"></span>
         <span class="equal-toggle-label">Equal Selection</span>
       </label>
+    </div>
+    <div class="equal-mode-row" id="equal-mode-row">
+      <button class="mode-chip active" id="mode-songs" onclick="setEqualMode('songs')">Song Count</button>
+      <button class="mode-chip" id="mode-time" onclick="setEqualMode('time')">Listening Time</button>
     </div>
     <button class="btn btn-full" onclick="buildQueue()">Build Shuffled Queue</button>
   </div>
