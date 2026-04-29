@@ -762,7 +762,7 @@ function initButtonBubbles(btn) {
     rotSpeed: (Math.random() - 0.5) * 0.018,
   }));
 
-  new ResizeObserver(() => {
+  function syncSize() {
     const bw = btn.clientWidth, bh = btn.clientHeight;
     if (bw === 0 || bh === 0) return;
     canvas.width = bw; canvas.height = bh;
@@ -771,7 +771,14 @@ function initButtonBubbles(btn) {
       shapes.forEach(s => { s.x = Math.random() * W; s.y = H + Math.random() * H; });
       ready = true;
     }
-  }).observe(btn);
+  }
+
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(btn);
+  } else {
+    syncSize();
+    window.addEventListener('resize', syncSize);
+  }
 
   function tick() {
     if (!ready) { requestAnimationFrame(tick); return; }
