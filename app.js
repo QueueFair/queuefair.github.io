@@ -668,10 +668,12 @@ async function startPlayback() {
     }
 
     setStatus('status3', 'Sending queue to Spotify…');
+    const MAX_URIS = 500;
+    const uris = queueTracks.slice(0, MAX_URIS).map(t => t.uri);
     const res = await fetch('https://api.spotify.com/v1/me/player/play?device_id=' + device.id, {
       method: 'PUT',
       headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uris: queueTracks.map(t => t.uri) }),
+      body: JSON.stringify({ uris }),
     });
     if (!res.ok) {
       let errMsg = res.status + ' ' + res.statusText;
@@ -680,7 +682,8 @@ async function startPlayback() {
     }
 
     $('spotify-notice').hidden = true;
-    setStatus('status3', `✓ ${queueTracks.length} tracks sent to "${device.name}"`, 'ok');
+    const truncated = queueTracks.length > MAX_URIS ? ` (first ${MAX_URIS} of ${queueTracks.length})` : '';
+    setStatus('status3', `✓ ${uris.length} tracks sent to "${device.name}"${truncated}`, 'ok');
     triggerBurst(playBtn, '#1DB954');
   } catch (e) {
     setStatus('status3', '✗ ' + e.message, 'err');
