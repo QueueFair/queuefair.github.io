@@ -655,7 +655,7 @@ function triggerBurst(sourceEl, color) {
 async function startPlayback() {
   if (!queueTracks.length) return;
   const playBtn = $('play-btn');
-  if (playBtn) { playBtn.disabled = true; playBtn.textContent = 'Starting…'; }
+  if (playBtn) { playBtn.disabled = true; $('play-btn-text').textContent = 'Starting…'; }
   setStatus('status3', 'Finding active device…');
   try {
     const devData = await spotifyGet('https://api.spotify.com/v1/me/player/devices');
@@ -663,7 +663,7 @@ async function startPlayback() {
     if (!device) {
       setStatus('status3', '✗ No active device found. Open Spotify and play something first.', 'err');
       $('spotify-notice').hidden = false;
-      if (playBtn) triggerBurst(playBtn, '#ee0055');
+      triggerCircleFlash('rgba(220, 50, 50, 0.85)', 2, 1000);
       return;
     }
 
@@ -684,12 +684,12 @@ async function startPlayback() {
     $('spotify-notice').hidden = true;
     const truncated = queueTracks.length > MAX_URIS ? ` (first ${MAX_URIS} of ${queueTracks.length})` : '';
     setStatus('status3', `✓ ${uris.length} tracks sent to "${device.name}"${truncated}`, 'ok');
-    triggerBurst(playBtn, '#1DB954');
+    triggerCircleFlash('rgba(50, 220, 100, 0.90)', -2, 1000);
   } catch (e) {
     setStatus('status3', '✗ ' + e.message, 'err');
-    if (playBtn) triggerBurst(playBtn, '#ee0055');
+    triggerCircleFlash('rgba(220, 50, 50, 0.85)', 2, 1000);
   } finally {
-    if (playBtn) { playBtn.disabled = false; playBtn.textContent = 'Play on Spotify Now'; }
+    if (playBtn) { playBtn.disabled = false; $('play-btn-text').textContent = 'Play on Spotify Now'; }
   }
 }
 
@@ -807,6 +807,11 @@ function initButtonBubbles(btn) {
 
   let W = 0, H = 0;
   let mouseX = -9999, mouseY = -9999;
+  let flash = { active: false, color: null, vyBoost: 0, until: 0 };
+
+  window.triggerCircleFlash = function (color, vyBoost, duration) {
+    flash = { active: true, color, vyBoost, until: performance.now() + duration };
+  };
 
   function resize() {
     W = canvas.width = window.innerWidth;
@@ -849,6 +854,10 @@ function initButtonBubbles(btn) {
   const REPEL_R = 130, REPEL_STR = 1.8;
 
   function tick() {
+    const now = performance.now();
+    const flashing = flash.active && now < flash.until;
+    if (flash.active && now >= flash.until) flash.active = false;
+
     circles.forEach((c, i) => {
       // Mouse / touch push
       const dx = c.x - mouseX, dy = c.y - mouseY;
@@ -867,7 +876,7 @@ function initButtonBubbles(btn) {
       c.vy = c.vy * 0.97 + c.floatVy * 0.03;
 
       c.x += c.vx;
-      c.y += c.vy + c.floatVy;
+      c.y += c.vy + c.floatVy + (flashing ? flash.vyBoost : 0);
 
       // Wrap horizontally
       if (c.x + c.r < 0) c.x = W + c.r;
@@ -875,13 +884,15 @@ function initButtonBubbles(btn) {
 
       // Respawn at bottom once fully off the top
       if (c.y + c.r < 0) circles[i] = spawn(false);
+      // Respawn at top if pushed off bottom during downward flash
+      if (c.y - c.r > H) circles[i] = spawn(false);
     });
 
     ctx.clearRect(0, 0, W, H);
     circles.forEach(c => {
       ctx.beginPath();
       ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-      ctx.fillStyle = c.color;
+      ctx.fillStyle = flashing ? flash.color : c.color;
       ctx.fill();
     });
     requestAnimationFrame(tick);
