@@ -602,7 +602,7 @@ async function startPlayback() {
       throw new Error(errMsg);
     }
 
-    setStatus('status3', `✓ ${queueTracks.length} tracks sent to "${device.name}" — safe to close this tab.`, 'ok');
+    setStatus('status3', `✓ ${queueTracks.length} tracks sent to "${device.name}"`, 'ok');
   } catch (e) {
     setStatus('status3', '✗ ' + e.message, 'err');
   } finally {
