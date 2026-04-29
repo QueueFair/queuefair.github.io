@@ -198,6 +198,7 @@ input[type="text"]::placeholder { color: var(--muted); }
   width: 100%;
   padding: 1rem;
   font-size: 1.05rem;
+  font-style: normal;
   position: relative;
   overflow: hidden;
 }
@@ -675,7 +676,7 @@ input[type="text"]::placeholder { color: var(--muted); }
 
 /* ---- Mobile ---- */
 @media (max-width: 480px) {
-  body { padding: 1.2rem 0.8rem; }
+  body { padding: 1.2rem 0.8rem; overflow: hidden; height: 100dvh; }
 
   h1 {
     font-size: clamp(2.2rem, 14vw, 3.2rem);
@@ -690,7 +691,14 @@ input[type="text"]::placeholder { color: var(--muted); }
   .btn-full { font-size: 0.9rem; padding: 0.85rem; }
 
   .playlist-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.6rem; }
-  .members-grid  { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.5rem; }
+
+  /* Cap members grid so step-3 fits without page scroll */
+  .members-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.5rem;
+    max-height: clamp(120px, 26vh, 260px);
+    overflow-y: auto;
+  }
 
   .member-chip { font-size: 0.72rem; padding: 0.45rem 0.75rem; }
 
