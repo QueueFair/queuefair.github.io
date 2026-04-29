@@ -601,6 +601,56 @@ function renderTrackList() {
   list.appendChild(frag);
 }
 
+// ---- Burst animation ----
+function triggerBurst(sourceEl, color) {
+  const rect = sourceEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9998;';
+  document.body.appendChild(canvas);
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+
+  const particles = Array.from({ length: 22 }, () => {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2.5 + Math.random() * 7;
+    return {
+      x: cx, y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 1.5,
+      r: 5 + Math.random() * 16,
+      life: 1,
+      decay: 0.018 + Math.random() * 0.012,
+    };
+  });
+
+  ctx.fillStyle = color;
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let any = false;
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.18;
+      p.vx *= 0.97;
+      p.life -= p.decay;
+      if (p.life <= 0) return;
+      any = true;
+      ctx.globalAlpha = p.life;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    if (any) requestAnimationFrame(tick);
+    else canvas.remove();
+  }
+  requestAnimationFrame(tick);
+}
+
 // ---- Playback ----
 async function startPlayback() {
   if (!queueTracks.length) return;
@@ -613,6 +663,7 @@ async function startPlayback() {
     if (!device) {
       setStatus('status3', '✗ No active device found. Open Spotify and play something first.', 'err');
       $('spotify-notice').hidden = false;
+      if (playBtn) triggerBurst(playBtn, '#ee0055');
       return;
     }
 
@@ -630,10 +681,12 @@ async function startPlayback() {
 
     $('spotify-notice').hidden = true;
     setStatus('status3', `✓ ${queueTracks.length} tracks sent to "${device.name}"`, 'ok');
+    triggerBurst(playBtn, '#1DB954');
   } catch (e) {
     setStatus('status3', '✗ ' + e.message, 'err');
+    if (playBtn) triggerBurst(playBtn, '#ee0055');
   } finally {
-    if (playBtn) { playBtn.disabled = false; playBtn.textContent = '→ Play on Spotify Now'; }
+    if (playBtn) { playBtn.disabled = false; playBtn.textContent = 'Play on Spotify Now'; }
   }
 }
 
