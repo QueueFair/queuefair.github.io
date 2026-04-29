@@ -936,6 +936,15 @@ function initButtonBubbles(btn) {
 
 document.querySelectorAll('.btn-full').forEach(initButtonBubbles);
 
+// Prevent iOS Safari page scroll/bounce on mobile
+if (window.innerWidth <= 480) {
+  document.addEventListener('touchmove', e => {
+    if (!e.target.closest('.track-list, .playlist-grid, .members-grid')) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+}
+
 // Cursor-reactive background parallax
 (function () {
   const waveBg = document.querySelector('.wave-bg');
