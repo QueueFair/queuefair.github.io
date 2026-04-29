@@ -837,15 +837,15 @@ function initButtonBubbles(btn) {
   }, { passive: true });
 
   const COLORS = [
-    'rgba(29, 185, 84,  0.45)',
-    'rgba(20, 130, 58,  0.50)',
-    'rgba(80, 210, 120, 0.35)',
-    'rgba(12,  90, 40,  0.55)',
-    'rgba(140, 140, 140, 0.22)',
-    'rgba(80,  80,  80,  0.28)',
-    'rgba(190, 190, 190, 0.18)',
-    'rgba(255, 255, 255, 0.14)',
-    'rgba(220, 220, 220, 0.16)',
+    'rgba(29, 185, 84,  0.45)', // main green
+    'rgba(20, 130, 58,  0.50)', // dark green
+    'rgba(80, 210, 120, 0.35)', // light green
+    'rgba(12,  90, 40,  0.55)', // deep green
+    'rgba(140, 140, 140, 0.22)', // mid gray
+    'rgba(80,  80,  80,  0.28)', // dark gray
+    'rgba(190, 190, 190, 0.18)', // light gray
+    'rgba(255, 255, 255, 0.14)', // white
+    'rgba(220, 220, 220, 0.16)', // off-white
   ];
 
   function spawn(atRandom) {
@@ -892,6 +892,7 @@ function initButtonBubbles(btn) {
     }
 
     circles.forEach(c => {
+      // Mouse / touch push - sqrt only when inside repel radius
       const dx = c.x - mouseX, dy = c.y - mouseY;
       const dist2 = dx * dx + dy * dy;
       if (dist2 < REPEL_R2 && dist2 > 0) {
@@ -900,25 +901,30 @@ function initButtonBubbles(btn) {
         c.vx += (dx / dist) * t * t * REPEL_STR;
         c.vy += (dy / dist) * t * t * REPEL_STR;
       }
+
       c.vx += (Math.random() - 0.5) * 0.025;
       c.vx *= 0.97;
       c.vy = c.vy * 0.97 + c.floatVy * 0.03;
+
       c.x += c.vx;
       c.y += c.vy + c.floatVy + (flashBlend === 1 ? flash.vyBoost : 0);
+
       if (c.x + c.r < 0) c.x = W + c.r;
       if (c.x - c.r > W) c.x = -c.r;
+
       if (c.y + c.r < 0 || c.y - c.r > H) resetCircle(c);
     });
 
     ctx.clearRect(0, 0, W, H);
 
-    // Batch draws by color: one beginPath+fill per color group instead of per circle
+    // Batch draws by color: one fill() per color group instead of per circle.
+    // moveTo lifts the pen before each arc so no lines connect between circles.
     colorGroups.forEach(arr => { arr.length = 0; });
     circles.forEach(c => colorGroups.get(c.color).push(c));
     colorGroups.forEach((group, color) => {
       if (!group.length) return;
       ctx.beginPath();
-      group.forEach(c => ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2));
+      group.forEach(c => { ctx.moveTo(c.x + c.r, c.y); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2); });
       ctx.fillStyle = color;
       ctx.fill();
     });
@@ -928,7 +934,7 @@ function initButtonBubbles(btn) {
       ctx.globalAlpha = flashBlend;
       ctx.fillStyle = flash.color;
       ctx.beginPath();
-      circles.forEach(c => ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2));
+      circles.forEach(c => { ctx.moveTo(c.x + c.r, c.y); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2); });
       ctx.fill();
       ctx.globalAlpha = 1;
     }
