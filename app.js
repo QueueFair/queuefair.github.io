@@ -677,11 +677,17 @@ async function startPlayback() {
     }
 
     setStatus('status3', 'Sending queue to Spotify…');
-    // Disable shuffle so Spotify plays the tracks in the order shown, not its own random order
-    await fetch('https://api.spotify.com/v1/me/player/shuffle?state=false&device_id=' + device.id, {
-      method: 'PUT',
-      headers: { Authorization: 'Bearer ' + accessToken },
-    }).catch(() => {});
+    // Disable shuffle and repeat-track so Spotify plays exactly what's shown
+    await Promise.all([
+      fetch('https://api.spotify.com/v1/me/player/shuffle?state=false&device_id=' + device.id, {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + accessToken },
+      }).catch(() => {}),
+      fetch('https://api.spotify.com/v1/me/player/repeat?state=off&device_id=' + device.id, {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + accessToken },
+      }).catch(() => {}),
+    ]);
 
     const MAX_URIS = 500;
     const uris = queueTracks.slice(0, MAX_URIS).map(t => t.uri);
@@ -884,7 +890,7 @@ function initButtonBubbles(btn) {
     c.color = COLORS[Math.floor(Math.random() * COLORS.length)];
   }
 
-  // Pre-allocated per-color buckets — reused every frame to avoid GC pressure
+  // Pre-allocated per-color buckets - reused every frame to avoid GC pressure
   const colorGroups = new Map(COLORS.map(c => [c, []]));
 
   function tick() {
