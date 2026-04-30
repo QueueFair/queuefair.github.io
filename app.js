@@ -676,6 +676,12 @@ async function startPlayback() {
     }
 
     setStatus('status3', 'Sending queue to Spotify…');
+    // Disable shuffle so Spotify plays the tracks in the order shown, not its own random order
+    await fetch('https://api.spotify.com/v1/me/player/shuffle?state=false&device_id=' + device.id, {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + accessToken },
+    }).catch(() => {});
+
     const MAX_URIS = 500;
     const uris = queueTracks.slice(0, MAX_URIS).map(t => t.uri);
     const res = await fetch('https://api.spotify.com/v1/me/player/play?device_id=' + device.id, {
